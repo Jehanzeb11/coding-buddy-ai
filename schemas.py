@@ -8,3 +8,4 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[Message]
     persona: Optional[str] = "assistant"
+    stream: Optional[bool] = False

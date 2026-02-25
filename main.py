@@ -22,21 +22,30 @@ async def chat(request: ChatRequest):
     if request.persona not in PERSONAS:
         raise HTTPException(status_code=400, detail="Invalid persona")
 
-    def stream():
+    messages = [
+        {"role": "system", "content": PERSONAS[request.persona]},
+        *[{"role": m.role, "content": m.content} for m in request.messages]
+    ]
+
+    if request.stream:
+        def stream():
+            response = client.chat.completions.create(
+                model=MODEL,
+                messages=messages,
+                stream=True
+            )
+            for chunk in response:
+                token = chunk.choices[0].delta.content
+                if token:
+                    yield token
+        return StreamingResponse(stream(), media_type="text/plain")
+    else:
         response = client.chat.completions.create(
             model=MODEL,
-            messages=[
-                {"role": "system", "content": PERSONAS[request.persona]},
-                *[{"role": m.role, "content": m.content} for m in request.messages]
-            ],
-            stream=True
+            messages=messages,
+            stream=False
         )
-        for chunk in response:
-            token = chunk.choices[0].delta.content
-            if token:
-                yield token
-
-    return StreamingResponse(stream(), media_type="text/plain")
+        return {"content": response.choices[0].message.content}
 
 # ─── Personas ────────────────────────────────────────
 @app.get("/personas")
