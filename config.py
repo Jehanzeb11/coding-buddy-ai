@@ -6,6 +6,7 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL = "llama-3.1-8b-instant"
+# MODEL = "groq/compound"
 MAX_TOKENS = 4096
 
 if not GROQ_API_KEY:
