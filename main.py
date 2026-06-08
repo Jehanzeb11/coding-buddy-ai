@@ -7,8 +7,6 @@ from prompts import PERSONAS
 from classifier import predict_persona
 
 app = FastAPI(title="AI Code Assistant", version="1.0.0")
-
-# allow requests from Next.js frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,19 +14,15 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# ─── Chat ────────────────────────────────────────────
-
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    # Use Decision Tree to auto-detect persona if not provided
     persona = request.persona
     if not persona or persona not in PERSONAS:
-        # Get the last user message
         if request.messages:
             last_message = request.messages[-1].content
             persona = predict_persona(last_message)
         else:
-            persona = "assistant"  # Default fallback
+            persona = "assistant"  
     
     if persona not in PERSONAS:
         raise HTTPException(status_code=400, detail="Invalid persona")
@@ -58,7 +52,6 @@ async def chat(request: ChatRequest):
         )
         return {"content": response.choices[0].message.content}
 
-# ─── Personas ────────────────────────────────────────
 @app.get("/personas")
 def list_personas():
     return [
@@ -68,7 +61,6 @@ def list_personas():
         {"key": "explainer", "label": "Explainer", "icon": "📖"},
     ]
 
-# ─── Health Check ────────────────────────────────────
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "1.0.0"}
